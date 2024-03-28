@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Organograma Interativo com jsPlumb</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsPlumb/2.15.6/js/jsplumb.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <style>
+        #organogramaContainer {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #000;
+            position: relative;
+            overflow: auto;
+            background: #fff;
+        }
+        .draggable {
+            padding: 10px;
+            width: 120px;
+            height: auto;
+            border: 2px solid #005587;
+            border-radius: 3px;
+            background-color: #ffffff;
+            text-align: center;
+            cursor: move;
+            box-shadow: 2px 2px 10px #aaa;
+            position: absolute;
+            z-index: 5;
+        }
+        .delete-box {
+            display: none; /* Initially hidden for export */
+        }
+        textarea {
+            width: calc(100% - 20px);
+            height: 50px;
+            border: none;
+            text-align: center;
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="organogramaContainer"></div>
+<button id="adicionarCaixa">Adicionar Caixa</button>
+<button id="exportarPdf">Exportar para PDF</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let idCounter = 0;
+        const jsPlumbInstance = jsPlumb.getInstance({
+            Connector: ["Flowchart", { cornerRadius: 5 }],
+            PaintStyle: { stroke: '#5c96bc', strokeWidth: 2 },
+            EndpointStyle: { fill: '#5c96bc', radius: 7 },
+            EndpointHoverStyle: { fill: "#d0d0d0" },
+            Container: "organogramaContainer"
+        });
+
+        document.getElementById('adicionarCaixa').addEventListener('click', function() {
+            adicionarCaixa(jsPlumbInstance);
+        });
+
+        function adicionarCaixa(jsPlumbInstance) {
+            idCounter++;
+            const caixaId = 'caixa' + idCounter;
+            const novaCaixa = document.createElement('div');
+            novaCaixa.className = 'draggable';
+            novaCaixa.id = caixaId;
+            novaCaixa.innerHTML = '<textarea>Nome ' + idCounter + '</textarea>';
+
+            document.getElementById('organogramaContainer').appendChild(novaCaixa);
+
+            jsPlumbInstance.draggable(novaCaixa);
+
+            // Adicionando endpoints em todos os lados da caixa com âncoras dinâmicas
+            const anchors = ['Top', 'Bottom', 'Left', 'Right'];
+            anchors.forEach(function(anchor) {
+                jsPlumbInstance.addEndpoint(caixaId, {
+                    anchor: anchor,
+                    isSource: true,
+                    isTarget: true,
+                    maxConnections: -1,
+                    endpoint: "Dot",
+                    paintStyle: { fill: '#5c96bc', radius: 7 },
+                    connector: ["Flowchart", { gap: 8, cornerRadius: 5, alwaysRespectStubs: true }],
+                    connectorOverlays: [["Arrow", { width: 10, length: 10, location: 1 }]]
+                });
+            });
+        }
+
+        document.getElementById('exportarPdf').addEventListener('click', function() {
+            // Esconde os botões de exclusão
+            document.querySelectorAll('.delete-box').forEach(function(btn) {
+                btn.style.display = 'none';
+            });
+
+            html2canvas(document.getElementById('organogramaContainer'), {
+                scale: 2
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jspdf.jsPDF({
+                    orientation: 'l',
+                    unit: 'px',
+                    format: [canvas.width, canvas.height]
+                });
+                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                pdf.save('organograma.pdf');
+
+                // Mostra os botões de exclusão novamente
+                document.querySelectorAll('.delete-box').forEach(function(btn) {
+                    btn.style.display = 'block';
+                });
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
