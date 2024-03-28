@@ -69,6 +69,15 @@
             novaCaixa.id = caixaId;
             novaCaixa.innerHTML = '<textarea>Nome ' + idCounter + '</textarea>';
 
+            // Adiciona um ouvinte de eventos para capturar o pressionamento da tecla Delete
+    novaCaixa.addEventListener('keydown', function(event) {
+        // Verifica se a tecla pressionada é a tecla Delete
+        if (event.key === "Delete" || event.keyCode === 46) {
+            // Remove a caixa e todos os seus endpoints associados
+            jsPlumbInstance.remove(caixaId);
+        }
+    });
+
             document.getElementById('organogramaContainer').appendChild(novaCaixa);
 
             jsPlumbInstance.draggable(novaCaixa);
