@@ -65,6 +65,7 @@
             idCounter++;
             const caixaId = 'caixa' + idCounter;
             const novaCaixa = document.createElement('div');
+	    novaCaixa.setAttribute('tabindex', '0'); // Permite que a div receba foco
             novaCaixa.className = 'draggable';
             novaCaixa.id = caixaId;
             novaCaixa.innerHTML = '<textarea>Nome ' + idCounter + '</textarea>';
